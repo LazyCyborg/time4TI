@@ -62,6 +62,8 @@ with st.expander("ℹ️ Set up for classic TI with the Keysight EDU33212A", exp
     
     See: 
     
+    https://github.com/LazyCyborg/time4TI/blob/main/Find_closest_electrodes.ipynb
+    
     for a simple way to use MNE-Python in order to find the closest electrode locations which is output by SimNIBS in subject space.
     
     """)
