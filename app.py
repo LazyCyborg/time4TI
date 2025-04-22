@@ -88,11 +88,12 @@ if not st.session_state.timer_running:
             if carr_freq_2 - carr_freq_1 < 0:
                 st.warning("Modulating frequencu cannot be negative. Adjust frequencies accordingly.")
 
+            mod_freq = carr_freq_2 - carr_freq_1
             st.session_state['Carrier frequency 2'] = carr_freq_2
 
-            st.write(f"Modulating frequency = {carr_freq_2 - carr_freq_1} Hz")
+            st.write("Modulating frequency (Hz)", mod_freq)
 
-            st.session_state['Modulating frequency'] = carr_freq_2 - carr_freq_1
+            st.session_state['Modulating frequency'] = mod_freq
 
             target_n_cycles = st.number_input("Set target number of cycles", min_value=1, max_value=120)
             st.write("Selected number of cycles ", target_n_cycles)
