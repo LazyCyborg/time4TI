@@ -3,27 +3,25 @@ import pandas as pd
 import datetime
 import time
 
-# --- Initialize Session State ---
-# This needs to run first on every execution to ensure state exists
 if 'Number of cycles' not in st.session_state:
     st.session_state['Number of cycles']= 0
     st.session_state['Target number of cycles'] = 1
 if 'Frequency' not in st.session_state:
-    st.session_state['Carrier frequency 1'] = 8000 # Default added
-    st.session_state['Carrier frequency 2'] = 8130 # Default added
-    st.session_state['Modulating frequency'] = 130 # Default added
+    st.session_state['Carrier frequency 1'] = 8000
+    st.session_state['Carrier frequency 2'] = 8130
+    st.session_state['Modulating frequency'] = 130
 if 'timer_running' not in st.session_state:
     st.session_state.timer_running = False
     st.session_state.end_time = None
     st.session_state.vpp_value = 0.0
-    st.session_state.target_vpp = 4.0 # Default added
+    st.session_state.target_vpp = 4.0
     st.session_state.last_ramp_second = -1
     st.session_state.ramp_speed = 0.1
 if 'paused' not in st.session_state:
     st.session_state.paused = False
-    st.session_state.time_remaining_on_pause = None # Store remaining seconds when paused
+    st.session_state.time_remaining_on_pause = None
 if 'quit_early' not in st.session_state:
-    st.session_state.quit_early = False # Flag to indicate if session was quit
+    st.session_state.quit_early = False
 if 'session_summary' not in st.session_state:
     st.session_state.session_summary = None
 
@@ -71,9 +69,7 @@ st.metric("Number of cycles", f"{st.session_state['Number of cycles']}")
 
 ramp_message_placeholder = st.empty()
 
-# --- Main Display Logic ---
 if not st.session_state.timer_running and not st.session_state.ramping_down:
-    # --- STATE: Timer Not Running (Initial or Finished) ---
 
     if st.session_state.session_summary is not None:
         st.write("--- Session Summary ---")
@@ -121,7 +117,6 @@ if not st.session_state.timer_running and not st.session_state.ramping_down:
                 "Duration per cycle (minutes)",
                 min_value=1, max_value=120, value=5, key="minutes_slider"
             )
-            # Use .get() for robust access to state with defaults
             vpp_val = st.slider(
                 "Target Amplitude (Vpp)",
                 min_value=0.0, max_value=6.0, value=st.session_state.get('target_vpp', 4.0), step=0.1, key="vpp_slider"
@@ -131,20 +126,17 @@ if not st.session_state.timer_running and not st.session_state.ramping_down:
                 "Channel 1 carrier frequency (Hz)",
                 min_value=0, max_value=20000, value=st.session_state.get('Carrier frequency 1', 8000), step=1, key="carr_1"
             )
-            # <<< FIX: Remove immediate state update here >>>
-            # st.session_state['Carrier frequency 1'] = carr_freq_1
 
             carr_freq_2 = st.number_input(
                 "Channel 2 carrier frequency (Hz)",
                 min_value=0, max_value=20000, value=st.session_state.get('Carrier frequency 2', 8130), step=1, key="carr_2"
             )
 
-            # Calculate mod_freq from form inputs for display
-            mod_freq = abs(carr_freq_2 - carr_freq_1) # Use abs() for correct calculation
+            mod_freq = abs(carr_freq_2 - carr_freq_1)
             if carr_freq_2 - carr_freq_1 < 0:
-                st.caption("Note: Modulating frequency calculated as absolute difference.") # More subtle warning
+                st.caption("Note: Modulating frequency calculated as absolute difference.")
 
-            st.write("Modulating frequency (Hz)", mod_freq) # Display calculated value
+            st.write("Modulating frequency (Hz)", mod_freq)
 
             target_n_cycles = st.number_input(
                 "Set target number of cycles",
@@ -158,17 +150,15 @@ if not st.session_state.timer_running and not st.session_state.ramping_down:
                 min_value=0.01, max_value=1.0, step=0.01, format="%.2f", key="ramp_speed_form"
             )
 
-            # Update button logic
-            updated = st.form_submit_button("Update Configuration", icon="🔄") # Renamed for clarity
+            updated = st.form_submit_button("Update Configuration", icon="🔄") #
             if updated:
-                # <<< FIX: Explicitly set state on Update >>>
                 st.session_state['Target number of cycles'] = target_n_cycles
                 st.session_state.target_vpp = vpp_val
-                st.session_state['Carrier frequency 1'] = carr_freq_1 # Set from form var
-                st.session_state['Carrier frequency 2'] = carr_freq_2 # Set from form var
-                st.session_state['Modulating frequency'] = abs(carr_freq_2 - carr_freq_1) # Set calculated value
+                st.session_state['Carrier frequency 1'] = carr_freq_1 #
+                st.session_state['Carrier frequency 2'] = carr_freq_2 #
+                st.session_state['Modulating frequency'] = abs(carr_freq_2 - carr_freq_1)
                 st.session_state.ramp_speed = ramp_speed_input
-                st.success("Configuration updated!") # Give feedback
+                st.success("Configuration updated!")
 
             st.divider()
             st.text('Ramp ↑ will appear on even seconds remaining.')
@@ -176,7 +166,6 @@ if not st.session_state.timer_running and not st.session_state.ramping_down:
             submitted = st.form_submit_button("Start Session", icon="🚀")
 
             if submitted:
-                # <<< FIX: Explicitly set ALL state from form vars on Start >>>
                 st.session_state['Target number of cycles'] = target_n_cycles
                 st.session_state.target_vpp = vpp_val
                 st.session_state['Carrier frequency 1'] = carr_freq_1
@@ -198,7 +187,6 @@ if not st.session_state.timer_running and not st.session_state.ramping_down:
                 st.rerun()
 
 elif st.session_state.timer_running or st.session_state.ramping_down:
-    # --- STATE: Active Session (Timer Running OR Ramping Down) ---
 
     st.metric("Current Amplitude (Vpp)", f"{st.session_state.vpp_value:.1f}")
     secs_remaining_total = 0
@@ -216,7 +204,7 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
              st.metric("Time Remaining (Paused)", "--:--")
         ramp_message_placeholder.empty()
 
-    else: # Not Paused
+    else:
         if st.session_state.ramping_down:
             st.info("Ramping Down...")
             if st.session_state.ramp_down_tick_flag:
@@ -232,7 +220,6 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
                 st.session_state.ramping_down = False
                 st.session_state.quit_early = False
                 st.session_state['Number of cycles'] += 1
-                # <<< FIX: Read directly from session state for summary >>>
                 d_complete = {
                     'Status': ['Completed'],
                     'Target Cycles': [st.session_state['Target number of cycles']],
@@ -268,7 +255,6 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
                         st.session_state.ramping_down = False
                         st.session_state.quit_early = False
                         st.session_state['Number of cycles'] += 1
-                        # <<< FIX: Read directly from session state for summary >>>
                         d_finish_vpp0 = {
                             'Status': ['Completed (Vpp=0 at end)'],
                             'Target Cycles': [st.session_state['Target number of cycles']],
@@ -280,7 +266,6 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
                             'Final Vpp': [0.0]
                         }
                         st.session_state.session_summary = pd.DataFrame(d_finish_vpp0)
-                        # No need for separate df/download here, summary display handles it
                         ramp_message_placeholder.empty()
                         st.rerun()
 
@@ -302,7 +287,6 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
                     else:
                          ramp_message_placeholder.empty()
 
-    # --- Action Buttons ---
     st.divider()
     col1, col2 = st.columns(2)
     with col1:
@@ -334,8 +318,6 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
                 st.session_state.paused = False
                 st.session_state.quit_early = True
 
-                # <<< FIX: Read directly from session state for summary >>>
-                # (This part was already correct in the previous version, just confirming)
                 d_quit = {
                     'Status': ['Quit Early'],
                     'Target Cycles': [st.session_state['Target number of cycles']],
@@ -347,11 +329,9 @@ elif st.session_state.timer_running or st.session_state.ramping_down:
                     'Final Vpp': [final_vpp_quit]
                 }
                 st.session_state.session_summary = pd.DataFrame(d_quit)
-                # No need for separate df/download here, summary display handles it
                 ramp_message_placeholder.empty()
                 st.rerun()
 
-# --- Conditional Rerun Trigger ---
 if (st.session_state.timer_running or st.session_state.ramping_down) and not st.session_state.paused:
     time.sleep(1)
     st.rerun()
